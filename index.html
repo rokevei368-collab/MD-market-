@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MD Market - Login</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #eef3ff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      background: white;
+      width: 100%;
+      max-width: 390px;
+      padding: 25px;
+      border-radius: 18px;
+      box-shadow: 0 8px 30px #0001;
+    }
+    h1 { text-align: center; color: #1758d4; }
+    p { text-align: center; color: #667085; }
+    .tabs { display: flex; gap: 8px; }
+    button {
+      cursor: pointer;
+      border: 0;
+      border-radius: 9px;
+      padding: 12px;
+      font-size: 15px;
+    }
+    .tabs button { flex: 1; background: #e9efff; }
+    .tabs button.active, .submit {
+      background: #1758d4;
+      color: white;
+    }
+    label { display: block; margin-top: 15px; }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-top: 7px;
+      border: 1px solid #ccd4e0;
+      border-radius: 9px;
+      font-size: 16px;
+    }
+    .submit { width: 100%; margin-top: 20px; }
+    #message { overflow-wrap: anywhere; font-size: 14px; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h1>MD Market</h1>
+  <p>আপনার অ্যাকাউন্টে প্রবেশ করুন</p>
+
+  <div class="tabs">
+    <button id="loginTab" class="active">লগইন</button>
+    <button id="registerTab">রেজিস্ট্রেশন</button>
+  </div>
+
+  <form id="authForm">
+    <div id="nameBox" class="hidden">
+      <label>আপনার নাম</label>
+      <input id="name" type="text" autocomplete="name">
+    </div>
+
+    <label>ইমেইল</label>
+    <input id="email" type="email"
+      autocomplete="email" required>
+
+    <label>পাসওয়ার্ড</label>
+    <input id="password" type="password"
+      minlength="6" autocomplete="current-password" required>
+
+    <button class="submit" id="submitBtn" type="submit">
+      লগইন করুন
+    </button>
+  </form>
+
+  <p id="message" aria-live="polite"></p>
+
+  <div id="welcome" class="hidden">
+    <h3>লগইন সফল হয়েছে!</h3>
+    <p id="userEmail"></p>
+    <button class="submit" id="logoutBtn">লগআউট</button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp }
+  from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut,
+  updateProfile
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+// Firebase Console থেকে নিজের Web App config বসান
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+const form = document.getElementById("authForm");
+const message = document.getElementById("message");
+const nameBox = document.getElementById("nameBox");
+const nameInput = document.getElementById("name");
+const emailInput = document.getElementById("email");
+const passwordInput = document.getElementById("password");
+const submitBtn = document.getElementById("submitBtn");
+const welcome = document.getElementById("welcome");
+const loginTab = document.getElementById("loginTab");
+const registerTab = document.getElementById("registerTab");
+
+let mode = "login";
+
+function setMode(newMode) {
+  mode = newMode;
+  const registering = mode === "register";
+
+  nameBox.classList.toggle("hidden", !registering);
+  nameInput.required = registering;
+
+  loginTab.classList.toggle("active", !registering);
+  registerTab.classList.toggle("active", registering);
+
+  submitBtn.textContent = registering
+    ? "রেজিস্ট্রেশন করুন"
+    : "লগইন করুন";
+
+  passwordInput.autocomplete = registering
+    ? "new-password"
+    : "current-password";
+
+  message.textContent = "";
+}
+
+loginTab.onclick = () => setMode("login");
+registerTab.onclick = () => setMode("register");
+
+function showError(error) {
+  const errors = {
+    "auth/email-already-in-use": "এই ইমেইলে অ্যাকাউন্ট আছে। লগইন করুন।",
+    "auth/invalid-email": "সঠিক ইমেইল লিখুন।",
+    "auth/weak-password": "পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের দিন।",
+    "auth/invalid-credential": "ইমেইল অথবা পাসওয়ার্ড ভুল।",
+    "auth/operation-not-allowed": "Firebase-এ Email/Password চালু করুন।",
+    "auth/network-request-failed": "ইন্টারনেট সংযোগ পরীক্ষা করুন।"
+  };
+
+  message.textContent =
+    errors[error.code] || "সমস্যা হয়েছে: " + error.message;
+}
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  submitBtn.disabled = true;
+  message.textContent = "";
+
+  try {
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+
+    if (mode === "register") {
+      const result = await createUserWithEmailAndPassword(
+        auth, email, password
+      );
+
+      const displayName = nameInput.value.trim();
+
+      if (displayName) {
+        await updateProfile(result.user, {
+          displayName: displayName
+        });
+      }
+
+      message.textContent = "রেজিস্ট্রেশন সফল হয়েছে!";
+    } else {
+      await signInWithEmailAndPassword(
+        auth, email, password
+      );
+
+      message.textContent = "লগইন সফল হয়েছে!";
+    }
+  } catch (error) {
+    showError(error);
+  } finally {
+    submitBtn.disabled = false;
+  }
+});
+
+onAuthStateChanged(auth, (user) => {
+  form.classList.toggle("hidden", !!user);
+  loginTab.classList.toggle("hidden", !!user);
+  registerTab.classList.toggle("hidden", !!user);
+  welcome.classList.toggle("hidden", !user);
+
+  if (user) {
+    document.querySelector(".card > p").textContent =
+      "আপনার অ্যাকাউন্ট";
+
+    document.getElementById("userEmail").textContent =
+      user.email || "";
+  } else {
+    document.querySelector(".card > p").textContent =
+      "আপনার অ্যাকাউন্টে প্রবেশ করুন";
+  }
+});
+
+document.getElementById("logoutBtn").onclick = async () => {
+  try {
+    await signOut(auth);
+    message.textContent = "লগআউট সফল হয়েছে।";
+  } catch (error) {
+    showError(error);
+  }
+};
+</script>
+</body>
+  </html>
