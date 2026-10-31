@@ -1,0 +1,257 @@
+
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MD Market Dashboard</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;font-family:Arial,sans-serif;
+ background:#f2f5fb;color:#172033
+}
+header{
+ background:linear-gradient(120deg,#1456d9,#347cf5);
+ color:white;padding:22px 18px;border-radius:0 0 25px 25px
+}
+header h1{margin:0;font-size:25px}
+header p{margin:8px 0 0}
+.container{padding:16px;max-width:850px;margin:auto}
+.welcome{font-size:20px;font-weight:bold;margin:12px 0}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card{
+ background:white;padding:18px;border-radius:16px;
+ box-shadow:0 3px 12px #0000000c
+}
+.card small{color:#68758a}
+.card h2{margin:10px 0 0;color:#1456d9}
+.section-title{margin:25px 0 12px;font-size:19px}
+.actions{
+ display:grid;grid-template-columns:1fr 1fr;gap:12px
+}
+.action{
+ background:white;border:0;border-radius:15px;
+ padding:18px 10px;text-align:center;
+ box-shadow:0 3px 12px #0000000c;
+ font-size:15px;font-weight:bold;color:#25334a;
+ cursor:pointer
+}
+.action span{display:block;font-size:27px;margin-bottom:9px}
+.action:active{transform:scale(.97)}
+.panel{
+ background:white;padding:18px;border-radius:16px;
+ margin-top:16px;display:none
+}
+.panel h3{margin-top:0}
+input,select,textarea{
+ width:100%;padding:13px;margin:7px 0 13px;
+ border:1px solid #d6deea;border-radius:10px;
+ font-size:15px
+}
+button.primary{
+ background:#155be5;color:white;border:0;
+ padding:13px 18px;border-radius:10px;
+ font-weight:bold;width:100%;font-size:16px
+}
+.product{
+ background:#f4f7fc;padding:12px;border-radius:10px;
+ margin:9px 0
+}
+.logout{background:#e94343;color:white}
+footer{text-align:center;padding:25px;color:#8993a5}
+</style>
+</head>
+<body>
+
+<header>
+ <h1>MD Market</h1>
+ <p>Seller Dashboard</p>
+</header>
+
+<div class="container">
+ <div class="welcome">স্বাগতম, Seller! 👋</div>
+
+ <div class="stats">
+  <div class="card">
+   <small>মোট প্রোডাক্ট</small>
+   <h2 id="totalProducts">0</h2>
+  </div>
+  <div class="card">
+   <small>মোট বিক্রি</small>
+   <h2 id="totalSales">৳0</h2>
+  </div>
+  <div class="card">
+   <small>মোট অর্ডার</small>
+   <h2 id="totalOrders">0</h2>
+  </div>
+  <div class="card">
+   <small>কাস্টমার</small>
+   <h2 id="totalCustomers">0</h2>
+  </div>
+ </div>
+
+ <h3 class="section-title">আপনার ব্যবসা পরিচালনা করুন</h3>
+
+ <div class="actions">
+  <button class="action" onclick="showPanel('add')">
+   <span>➕</span>প্রোডাক্ট যোগ করুন
+  </button>
+  <button class="action" onclick="showPanel('products')">
+   <span>🛍️</span>আমার প্রোডাক্ট
+  </button>
+  <button class="action" onclick="showPanel('orders')">
+   <span>📦</span>অর্ডার ম্যানেজমেন্ট
+  </button>
+  <button class="action" onclick="showPanel('sales')">
+   <span>📊</span>বিক্রির হিসাব
+  </button>
+  <button class="action" onclick="showPanel('customers')">
+   <span>👥</span>কাস্টমার
+  </button>
+  <button class="action" onclick="showPanel('settings')">
+   <span>⚙️</span>দোকানের সেটিংস
+  </button>
+ </div>
+
+ <div id="add" class="panel">
+  <h3>➕ নতুন প্রোডাক্ট যোগ করুন</h3>
+  <label>প্রোডাক্টের নাম</label>
+  <input id="pname" placeholder="প্রোডাক্টের নাম">
+  <label>দাম (টাকা)</label>
+  <input id="price" type="number" placeholder="যেমন 500">
+  <label>ক্যাটাগরি</label>
+  <select id="category">
+   <option>ইলেকট্রনিক্স</option>
+   <option>পোশাক</option>
+   <option>জুতা</option>
+   <option>ঘর ও রান্নাঘর</option>
+   <option>অন্যান্য</option>
+  </select>
+  <label>ছবির লিংক (ঐচ্ছিক)</label>
+  <input id="photo" placeholder="Image URL">
+  <button class="primary" onclick="addProduct()">প্রোডাক্ট সেভ করুন</button>
+ </div>
+
+ <div id="products" class="panel">
+  <h3>🛍️ আমার প্রোডাক্ট</h3>
+  <div id="productList">এখনো কোনো প্রোডাক্ট যোগ করা হয়নি।</div>
+ </div>
+
+ <div id="orders" class="panel">
+  <h3>📦 অর্ডার ম্যানেজমেন্ট</h3>
+  <p>এখানে আপনার ক্রেতাদের অর্ডার দেখা যাবে।</p>
+  <p>অর্ডার সিস্টেম এখনো সংযুক্ত করা হয়নি।</p>
+ </div>
+
+ <div id="sales" class="panel">
+  <h3>📊 বিক্রির হিসাব</h3>
+  <p>মোট বিক্রি: <b id="salesAmount">৳0</b></p>
+  <p>এটি এখন ডেমো হিসাব।</p>
+ </div>
+
+ <div id="customers" class="panel">
+  <h3>👥 কাস্টমার</h3>
+  <p>কাস্টমার তালিকা এখনো সংযুক্ত করা হয়নি।</p>
+ </div>
+
+ <div id="settings" class="panel">
+  <h3>⚙️ দোকানের সেটিংস</h3>
+  <label>দোকানের নাম</label>
+  <input id="shopName" placeholder="MD Market">
+  <button class="primary" onclick="saveShop()">নাম সেভ করুন</button>
+ </div>
+
+ <div class="panel" style="display:block">
+  <button class="primary logout" onclick="logout()">Logout</button>
+ </div>
+</div>
+
+<footer>© 2026 MD Market | Seller Dashboard</footer>
+
+<script>
+let productData = JSON.parse(localStorage.getItem("mdProducts") || "[]");
+
+function showPanel(id){
+ document.querySelectorAll(".panel").forEach(p=>p.style.display="none");
+ document.getElementById(id).style.display="block";
+ document.getElementById(id).scrollIntoView({behavior:"smooth"});
+}
+
+function addProduct(){
+ let name=document.getElementById("pname").value.trim();
+ let price=Number(document.getElementById("price").value);
+ let category=document.getElementById("category").value;
+ let photo=document.getElementById("photo").value.trim();
+
+ if(!name || price<=0){
+  alert("প্রোডাক্টের নাম ও সঠিক দাম দিন");
+  return;
+ }
+
+ productData.push({name,price,category,photo});
+ localStorage.setItem("mdProducts",JSON.stringify(productData));
+
+ document.getElementById("pname").value="";
+ document.getElementById("price").value="";
+ document.getElementById("photo").value="";
+
+ updateDashboard();
+ alert("প্রোডাক্ট যোগ হয়েছে!");
+ showPanel("products");
+}
+
+function updateDashboard(){
+ document.getElementById("totalProducts").innerText=productData.length;
+ document.getElementById("productList").innerHTML="";
+
+ if(productData.length===0){
+  document.getElementById("productList").innerText="কোনো প্রোডাক্ট নেই";
+ }
+
+ productData.forEach((p,i)=>{
+  let div=document.createElement("div");
+  div.className="product";
+  let name=document.createElement("b");
+  name.textContent=p.name;
+  let details=document.createElement("p");
+  details.textContent="দাম: ৳"+p.price+" | "+p.category;
+  let del=document.createElement("button");
+  del.textContent="মুছে ফেলুন";
+  del.onclick=()=>deleteProduct(i);
+  div.append(name,details,del);
+  document.getElementById("productList").appendChild(div);
+ });
+
+ document.getElementById("totalSales").innerText="৳0";
+ document.getElementById("salesAmount").innerText="৳0";
+ document.getElementById("totalOrders").innerText="0";
+ document.getElementById("totalCustomers").innerText="0";
+}
+
+function deleteProduct(i){
+ if(confirm("প্রোডাক্টটি মুছে ফেলবেন?")){
+  productData.splice(i,1);
+  localStorage.setItem("mdProducts",JSON.stringify(productData));
+  updateDashboard();
+ }
+}
+
+function saveShop(){
+ let name=document.getElementById("shopName").value.trim();
+ if(!name){alert("দোকানের নাম লিখুন");return;}
+ localStorage.setItem("mdShopName",name);
+ alert("দোকানের নাম সেভ হয়েছে");
+}
+
+function logout(){
+ if(confirm("আপনি কি লগআউট করতে চান?")){
+  window.location.href="index.html";
+ }
+}
+
+updateDashboard();
+</script>
+</body>
+  </html>
+    
