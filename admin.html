@@ -1,0 +1,346 @@
+
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MD Market Admin</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;
+ font-family:Arial,sans-serif;
+ background:#f1f5fb;
+ color:#172033;
+}
+header{
+ background:linear-gradient(120deg,#1456d9,#347cf5);
+ color:white;padding:22px;
+}
+header h2{margin:0}
+.container{
+ max-width:650px;
+ margin:auto;
+ padding:16px;
+}
+.card{
+ background:white;
+ padding:20px;
+ border-radius:16px;
+ margin:15px 0;
+ box-shadow:0 3px 15px #0001;
+}
+h3{margin-top:0}
+input,select{
+ width:100%;
+ padding:13px;
+ margin:8px 0 15px;
+ border:1px solid #ccd5e3;
+ border-radius:9px;
+ font-size:16px;
+}
+button{
+ border:0;
+ border-radius:9px;
+ padding:13px;
+ cursor:pointer;
+ font-size:16px;
+ font-weight:bold;
+}
+.primary{
+ background:#155be5;
+ color:white;
+ width:100%;
+}
+.delete{
+ background:#e94343;
+ color:white;
+ margin-top:10px;
+}
+.product{
+ background:#f2f5fb;
+ padding:13px;
+ border-radius:12px;
+ margin:12px 0;
+}
+.product img{
+ width:100%;
+ max-height:190px;
+ object-fit:contain;
+ border-radius:9px;
+}
+.hidden{display:none}
+</style>
+</head>
+
+<body>
+
+<header>
+<h2>MD Market - Admin Panel</h2>
+<p>আপনার অনলাইন দোকান পরিচালনা করুন</p>
+</header>
+
+<div class="container">
+
+<div class="card" id="loginBox">
+<h3>Admin Login</h3>
+<input id="email" type="email"
+placeholder="Admin Gmail">
+<input id="password" type="password"
+placeholder="Password">
+<button class="primary" id="loginBtn">
+Admin Login
+</button>
+<p id="loginMsg"></p>
+</div>
+
+<div id="adminArea" class="hidden">
+
+<div class="card">
+<h3>➕ নতুন প্রোডাক্ট যোগ করুন</h3>
+
+<label>প্রোডাক্টের নাম</label>
+<input id="pname" placeholder="প্রোডাক্টের নাম">
+
+<label>প্রোডাক্টের দাম</label>
+<input id="price" type="number"
+placeholder="যেমন 500">
+
+<label>ডিসকাউন্ট (%)</label>
+<input id="discount" type="number"
+min="0" max="100" value="0">
+
+<label>স্টক</label>
+<input id="stock" type="number"
+min="0" placeholder="যেমন 20">
+
+<label>ক্যাটাগরি</label>
+<select id="category">
+<option>ইলেকট্রনিক্স</option>
+<option>পোশাক</option>
+<option>জুতা</option>
+<option>ঘর ও রান্নাঘর</option>
+<option>অন্যান্য</option>
+</select>
+
+<label>প্রোডাক্ট ছবির URL</label>
+<input id="photo" type="url"
+placeholder="ছবির লিংক দিন">
+
+<button class="primary" id="addBtn">
+প্রোডাক্ট যোগ করুন
+</button>
+<p id="status"></p>
+</div>
+
+<div class="card">
+<h3>🛍️ আমার প্রোডাক্ট</h3>
+<div id="productList">লোড হচ্ছে...</div>
+</div>
+
+<button class="primary" id="logoutBtn"
+style="background:#e94343">
+Logout
+</button>
+
+</div>
+</div>
+
+<script type="module">
+
+import {initializeApp}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+getAuth,
+signInWithEmailAndPassword,
+onAuthStateChanged,
+signOut
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+import {
+getFirestore,
+collection,
+addDoc,
+getDocs,
+deleteDoc,
+doc,
+serverTimestamp
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const ADMIN_EMAIL = "skmaha123411@gmail.com";
+
+// index.html থেকে নিজের Firebase Config কপি করুন
+const firebaseConfig = {
+apiKey: "YOUR_API_KEY",
+authDomain: "YOUR_AUTH_DOMAIN",
+projectId: "YOUR_PROJECT_ID",
+storageBucket: "YOUR_STORAGE_BUCKET",
+messagingSenderId: "YOUR_SENDER_ID",
+appId: "YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const $ = id => document.getElementById(id);
+
+$("loginBtn").onclick = async () => {
+try {
+const email = $("email").value.trim().toLowerCase();
+const password = $("password").value;
+
+if(email !== ADMIN_EMAIL){
+$("loginMsg").textContent = "আপনি Admin নন!";
+return;
+}
+
+await signInWithEmailAndPassword(auth,email,password);
+
+} catch(error) {
+$("loginMsg").textContent =
+"Login ব্যর্থ: " + error.message;
+}
+};
+
+onAuthStateChanged(auth, async user => {
+if(user && user.email === ADMIN_EMAIL){
+$("loginBox").classList.add("hidden");
+$("adminArea").classList.remove("hidden");
+await loadProducts();
+}else{
+$("loginBox").classList.remove("hidden");
+$("adminArea").classList.add("hidden");
+
+if(user) await signOut(auth);
+}
+});
+
+$("addBtn").onclick = async () => {
+const name = $("pname").value.trim();
+const price = Number($("price").value);
+const discount = Number($("discount").value);
+const stock = Number($("stock").value);
+const category = $("category").value;
+const photo = $("photo").value.trim();
+
+if(!name || !Number.isFinite(price) || price <= 0 ||
+!Number.isInteger(stock) || stock < 0 ||
+!Number.isFinite(discount) || discount < 0 || discount > 100){
+alert("সঠিক তথ্য পূরণ করুন");
+return;
+}
+
+if(!auth.currentUser ||
+auth.currentUser.email !== ADMIN_EMAIL){
+alert("শুধু Admin প্রোডাক্ট যোগ করতে পারবেন");
+return;
+}
+
+try {
+$("addBtn").disabled = true;
+$("status").textContent = "সেভ হচ্ছে...";
+
+await addDoc(collection(db,"products"),{
+name,
+price,
+discount,
+stock,
+category,
+photo,
+createdAt: serverTimestamp()
+});
+
+$("pname").value = "";
+$("price").value = "";
+$("discount").value = "0";
+$("stock").value = "";
+$("photo").value = "";
+
+$("status").textContent = "প্রোডাক্ট সফলভাবে যোগ হয়েছে!";
+
+await loadProducts();
+
+} catch(error) {
+$("status").textContent = "সমস্যা: " + error.message;
+} finally {
+$("addBtn").disabled = false;
+}
+};
+
+async function loadProducts(){
+const list = $("productList");
+list.textContent = "লোড হচ্ছে...";
+
+try {
+const snapshot = await getDocs(collection(db,"products"));
+list.replaceChildren();
+
+if(snapshot.empty){
+list.textContent = "এখনো কোনো প্রোডাক্ট নেই";
+return;
+}
+
+snapshot.forEach(item => {
+const p = item.data();
+
+const div = document.createElement("div");
+div.className = "product";
+
+const title = document.createElement("h3");
+title.textContent = p.name || "";
+
+const details = document.createElement("p");
+details.textContent =
+"দাম: ৳" + p.price +
+" | ডিসকাউন্ট: " + (p.discount || 0) + "%" +
+" | স্টক: " + p.stock +
+" | " + (p.category || "");
+
+div.append(title);
+
+if(p.photo){
+const img = document.createElement("img");
+img.src = p.photo;
+img.alt = p.name || "Product";
+img.onerror = () => img.remove();
+div.append(img);
+}
+
+div.append(details);
+
+const del = document.createElement("button");
+del.className = "delete";
+del.textContent = "Delete";
+
+del.onclick = async () => {
+if(confirm("প্রোডাক্টটি মুছে ফেলবেন?")){
+try {
+await deleteDoc(doc(db,"products",item.id));
+await loadProducts();
+} catch(error) {
+alert("Delete ব্যর্থ: " + error.message);
+}
+}
+};
+
+div.append(del);
+list.append(div);
+});
+
+} catch(error) {
+list.textContent = "প্রোডাক্ট লোড হয়নি: " + error.message;
+}
+}
+
+$("logoutBtn").onclick = async () => {
+await signOut(auth);
+};
+
+</script>
+</body>
+</html>
