@@ -236,7 +236,8 @@ auth,email,password
 );
 
 message("Login সফল হয়েছে!");
-
+localStorage.setItem("mdLoggedIn", "true");
+window.location.href = "dashboard.html";
 }
 
 }catch(error){
