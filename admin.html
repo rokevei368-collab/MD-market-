@@ -173,16 +173,17 @@ from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const ADMIN_EMAIL = "skmaha123411@gmail.com";
 
-// index.html থেকে নিজের Firebase Config কপি করুন
-const firebaseConfig = {
-apiKey: "YOUR_API_KEY",
-authDomain: "YOUR_AUTH_DOMAIN",
-projectId: "YOUR_PROJECT_ID",
-storageBucket: "YOUR_STORAGE_BUCKET",
-messagingSenderId: "YOUR_SENDER_ID",
-appId: "YOUR_APP_ID"
-};
 
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDVM0IOKNl548Sgi__4a-aS48QImFnaOgQ",
+  authDomain: "md-market-b191e.firebaseapp.com",
+  projectId: "md-market-b191e",
+  storageBucket: "md-market-b191e.firebasestorage.app",
+  messagingSenderId: "215028387066",
+  appId: "1:215028387066:web:f241282a23033849580d43",
+  measurementId: "G-WV35XTRXZR"
+};
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
