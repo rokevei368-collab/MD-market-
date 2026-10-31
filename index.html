@@ -1,0 +1,281 @@
+
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MD Market</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;
+ font-family:Arial,sans-serif;
+ background:linear-gradient(135deg,#102b55,#2878ee);
+ min-height:100vh;
+ display:flex;
+ justify-content:center;
+ align-items:center;
+ padding:15px;
+}
+.card{
+ background:white;
+ width:100%;
+ max-width:420px;
+ padding:28px;
+ border-radius:20px;
+ box-shadow:0 15px 40px #0003;
+}
+.logo{
+ text-align:center;
+ font-size:30px;
+ font-weight:bold;
+ color:#155eef;
+}
+.logo span{color:orange}
+h2{text-align:center}
+.sub{text-align:center;color:#777}
+.tabs{
+ display:flex;
+ background:#eee;
+ padding:5px;
+ border-radius:10px;
+ margin:20px 0;
+}
+.tabs button{
+ width:50%;
+ border:0;
+ padding:12px;
+ border-radius:8px;
+ cursor:pointer;
+}
+.tabs .active{
+ background:#155eef;
+ color:white;
+}
+label{
+ display:block;
+ margin:12px 0 6px;
+ font-weight:bold;
+}
+input{
+ width:100%;
+ padding:13px;
+ border:1px solid #ddd;
+ border-radius:9px;
+ font-size:15px;
+}
+.mainbtn{
+ width:100%;
+ padding:14px;
+ margin-top:18px;
+ border:0;
+ border-radius:9px;
+ background:#155eef;
+ color:white;
+ font-weight:bold;
+ cursor:pointer;
+}
+.forgot{
+ display:block;
+ text-align:right;
+ margin-top:12px;
+ color:#155eef;
+ background:none;
+ border:0;
+ cursor:pointer;
+}
+#msg{
+ text-align:center;
+ margin-top:15px;
+ font-size:14px;
+}
+.hidden{display:none}
+</style>
+</head>
+<body>
+
+<div class="card">
+
+<div class="logo">MD <span>Market</span></div>
+
+<h2 id="heading">Welcome Back!</h2>
+<p class="sub" id="sub">আপনার অ্যাকাউন্টে লগ ইন করুন</p>
+
+<div class="tabs">
+<button id="loginTab" class="active">Login</button>
+<button id="registerTab">Register</button>
+</div>
+
+<form id="authForm">
+
+<div id="nameBox" class="hidden">
+<label>আপনার নাম</label>
+<input id="name" type="text" placeholder="আপনার নাম">
+</div>
+
+<label>Email Address</label>
+<input id="email" type="email"
+placeholder="আপনার ইমেইল" required>
+
+<label>Password</label>
+<input id="password" type="password"
+placeholder="কমপক্ষে ৬ অক্ষর" minlength="6" required>
+
+<button type="button" id="forgot"
+class="forgot">Forgot Password?</button>
+
+<button class="mainbtn" id="submitBtn">
+Login
+</button>
+
+</form>
+
+<div id="msg"></div>
+
+</div>
+
+<script type="module">
+
+import {initializeApp}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+getAuth,
+createUserWithEmailAndPassword,
+signInWithEmailAndPassword,
+sendPasswordResetEmail,
+updateProfile
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+/* নিজের Firebase Web App Config বসান */
+
+const firebaseConfig = {
+apiKey:"YOUR_API_KEY",
+authDomain:"YOUR_PROJECT_ID.firebaseapp.com",
+projectId:"YOUR_PROJECT_ID",
+appId:"YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+let mode="login";
+
+const $=id=>document.getElementById(id);
+
+function message(text,error=false){
+$("msg").textContent=text;
+$("msg").style.color=error?"red":"green";
+}
+
+function setMode(value){
+
+mode=value;
+
+let reg=mode==="register";
+
+$("loginTab").classList.toggle("active",!reg);
+$("registerTab").classList.toggle("active",reg);
+
+$("nameBox").classList.toggle("hidden",!reg);
+$("forgot").classList.toggle("hidden",reg);
+
+$("heading").textContent=reg?
+"Create Account":"Welcome Back!";
+
+$("sub").textContent=reg?
+"নতুন অ্যাকাউন্ট তৈরি করুন":
+"আপনার অ্যাকাউন্টে লগ ইন করুন";
+
+$("submitBtn").textContent=reg?
+"Register Now":"Login";
+
+message("");
+}
+
+$("loginTab").onclick=()=>setMode("login");
+$("registerTab").onclick=()=>setMode("register");
+
+$("authForm").addEventListener("submit",async e=>{
+
+e.preventDefault();
+
+let email=$("email").value.trim();
+let password=$("password").value;
+
+$("submitBtn").disabled=true;
+message("অপেক্ষা করুন...");
+
+try{
+
+if(mode==="register"){
+
+let user=await createUserWithEmailAndPassword(
+auth,email,password
+);
+
+let name=$("name").value.trim();
+
+if(name){
+await updateProfile(user.user,{
+displayName:name
+});
+}
+
+message("Registration সফল হয়েছে!");
+
+}else{
+
+await signInWithEmailAndPassword(
+auth,email,password
+);
+
+message("Login সফল হয়েছে!");
+
+}
+
+}catch(error){
+
+let errors={
+"auth/email-already-in-use":"এই ইমেইলে অ্যাকাউন্ট আছে",
+"auth/invalid-email":"সঠিক ইমেইল দিন",
+"auth/weak-password":"আরও শক্তিশালী পাসওয়ার্ড দিন",
+"auth/invalid-credential":"ইমেইল অথবা পাসওয়ার্ড ভুল"
+};
+
+message(errors[error.code]||"সমস্যা হয়েছে। আবার চেষ্টা করুন।",true);
+
+}finally{
+$("submitBtn").disabled=false;
+}
+
+});
+
+$("forgot").onclick=async()=>{
+
+let email=$("email").value.trim();
+
+if(!email){
+message("আগে Email লিখুন",true);
+return;
+}
+
+try{
+
+await sendPasswordResetEmail(auth,email);
+
+message("Password Reset Link ইমেইলে পাঠানো হয়েছে!");
+
+}catch(error){
+
+message("ইমেইল পাঠানো যায়নি। আবার চেষ্টা করুন।",true);
+
+}
+
+};
+
+</script>
+</body>
+  </html>
+  
