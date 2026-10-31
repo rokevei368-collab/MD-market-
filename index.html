@@ -1,237 +1,197 @@
+
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MD Market - Login</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #eef3ff;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    .card {
-      background: white;
-      width: 100%;
-      max-width: 390px;
-      padding: 25px;
-      border-radius: 18px;
-      box-shadow: 0 8px 30px #0001;
-    }
-    h1 { text-align: center; color: #1758d4; }
-    p { text-align: center; color: #667085; }
-    .tabs { display: flex; gap: 8px; }
-    button {
-      cursor: pointer;
-      border: 0;
-      border-radius: 9px;
-      padding: 12px;
-      font-size: 15px;
-    }
-    .tabs button { flex: 1; background: #e9efff; }
-    .tabs button.active, .submit {
-      background: #1758d4;
-      color: white;
-    }
-    label { display: block; margin-top: 15px; }
-    input {
-      width: 100%;
-      padding: 12px;
-      margin-top: 7px;
-      border: 1px solid #ccd4e0;
-      border-radius: 9px;
-      font-size: 16px;
-    }
-    .submit { width: 100%; margin-top: 20px; }
-    #message { overflow-wrap: anywhere; font-size: 14px; }
-    .hidden { display: none; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MD Market - Online Shopping</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f4f6fa;color:#17233b}
+header{background:#fff;padding:15px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.logo{font-size:25px;font-weight:bold;color:#155eef}
+.logo span{color:orange}
+.search{display:flex;flex:1;min-width:180px}
+input{padding:12px;border:1px solid #ddd;border-radius:8px;width:100%}
+button{cursor:pointer;border:0;border-radius:8px;padding:11px 15px}
+.search button{background:#155eef;color:white}
+.cart{background:#eaf1ff;color:#155eef;font-weight:bold}
+.hero{margin:20px;padding:35px;background:linear-gradient(120deg,#102a56,#246bce);color:white;border-radius:16px}
+.hero h1{font-size:32px}
+.hero button{background:white;color:#155eef;font-weight:bold}
+main{max-width:1100px;margin:auto;padding:15px}
+h2{margin-top:25px}
+.categories{display:flex;gap:10px;overflow:auto}
+.cat{background:white;border:1px solid #ddd;white-space:nowrap}
+.cat.active{background:#155eef;color:white}
+.products{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}
+.card{background:white;border-radius:12px;overflow:hidden;padding-bottom:12px;box-shadow:0 2px 8px #0001}
+.photo{height:130px;background:#eaf1ff;display:grid;place-items:center;font-size:55px}
+.info{padding:12px}
+.brand{font-size:12px;color:#777}
+.name{font-weight:bold;margin:8px 0}
+.price{color:#155eef;font-weight:bold;font-size:19px;margin:10px 0}
+.add{background:#155eef;color:white;width:100%}
+footer{background:#102a56;color:white;text-align:center;padding:25px;margin-top:35px}
+.modal{display:none;position:fixed;inset:0;background:#0009;align-items:center;justify-content:center;padding:15px}
+.modal.show{display:flex}
+.panel{background:white;border-radius:15px;padding:20px;width:100%;max-width:450px;max-height:85vh;overflow:auto}
+.line{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #ddd;gap:10px}
+.qty button{background:#eaf1ff}
+@media(max-width:700px){.products{grid-template-columns:repeat(2,1fr)}.hero h1{font-size:25px}}
+</style>
 </head>
 <body>
 
-<div class="card">
-  <h1>MD Market</h1>
-  <p>আপনার অ্যাকাউন্টে প্রবেশ করুন</p>
+<header>
+<div class="logo">MD <span>Market</span></div>
+<form class="search" id="searchForm">
+<input id="search" placeholder="পণ্য খুঁজুন...">
+<button>Search</button>
+</form>
+<button class="cart" onclick="openCart()">🛒 Cart (<span id="count">0</span>)</button>
+</header>
 
-  <div class="tabs">
-    <button id="loginTab" class="active">লগইন</button>
-    <button id="registerTab">রেজিস্ট্রেশন</button>
-  </div>
+<section class="hero">
+<h1>স্বাগতম MD Market-এ</h1>
+<p>বিভিন্ন কোম্পানির পণ্য কিনুন এক জায়গায়।</p>
+<button onclick="document.getElementById('shop').scrollIntoView()">Shop Now</button>
+</section>
 
-  <form id="authForm">
-    <div id="nameBox" class="hidden">
-      <label>আপনার নাম</label>
-      <input id="name" type="text" autocomplete="name">
-    </div>
+<main id="shop">
+<h2>পণ্যের ক্যাটাগরি</h2>
+<div class="categories" id="categories"></div>
 
-    <label>ইমেইল</label>
-    <input id="email" type="email"
-      autocomplete="email" required>
+<h2>আমাদের পণ্য</h2>
+<div class="products" id="products"></div>
+</main>
 
-    <label>পাসওয়ার্ড</label>
-    <input id="password" type="password"
-      minlength="6" autocomplete="current-password" required>
+<footer>
+<h2>MD Market</h2>
+<p>আপনার বিশ্বস্ত অনলাইন শপিং মার্কেট</p>
+</footer>
 
-    <button class="submit" id="submitBtn" type="submit">
-      লগইন করুন
-    </button>
-  </form>
-
-  <p id="message" aria-live="polite"></p>
-
-  <div id="welcome" class="hidden">
-    <h3>লগইন সফল হয়েছে!</h3>
-    <p id="userEmail"></p>
-    <button class="submit" id="logoutBtn">লগআউট</button>
-  </div>
+<div class="modal" id="modal">
+<div class="panel">
+<h2>Shopping Cart</h2>
+<button onclick="closeCart()">বন্ধ করুন ✕</button>
+<div id="cartItems"></div>
+<h3 id="total">মোট: ৳০</h3>
+<button onclick="checkout()" style="background:green;color:white;width:100%">অর্ডারের সারাংশ</button>
+</div>
 </div>
 
-<script type="module">
-import { initializeApp }
-  from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+<script>
+const products=[
+{id:1,brand:"Samsung",name:"Smart Watch",price:1250,cat:"Electronics",emoji:"⌚"},
+{id:2,brand:"Nike",name:"T-Shirt",price:850,cat:"Fashion",emoji:"👕"},
+{id:3,brand:"Sony",name:"Headphone",price:1500,cat:"Electronics",emoji:"🎧"},
+{id:4,brand:"Beauty Care",name:"Skin Care",price:750,cat:"Cosmetics",emoji:"🧴"},
+{id:5,brand:"MD Collection",name:"Bag",price:980,cat:"Fashion",emoji:"🎒"},
+{id:6,brand:"Home Choice",name:"Table Lamp",price:650,cat:"Home",emoji:"💡"},
+{id:7,brand:"Tech World",name:"Speaker",price:1100,cat:"Electronics",emoji:"🔊"},
+{id:8,brand:"Daily Needs",name:"Water Bottle",price:280,cat:"Home",emoji:"🍼"}
+];
 
-import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  onAuthStateChanged,
-  signOut,
-  updateProfile
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+let cart={};
+let category="All";
+const cats=["All",...new Set(products.map(p=>p.cat))];
 
-// Firebase Console থেকে নিজের Web App config বসান
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
-};
+function money(n){return "৳"+n.toLocaleString("en-IN")}
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-
-const form = document.getElementById("authForm");
-const message = document.getElementById("message");
-const nameBox = document.getElementById("nameBox");
-const nameInput = document.getElementById("name");
-const emailInput = document.getElementById("email");
-const passwordInput = document.getElementById("password");
-const submitBtn = document.getElementById("submitBtn");
-const welcome = document.getElementById("welcome");
-const loginTab = document.getElementById("loginTab");
-const registerTab = document.getElementById("registerTab");
-
-let mode = "login";
-
-function setMode(newMode) {
-  mode = newMode;
-  const registering = mode === "register";
-
-  nameBox.classList.toggle("hidden", !registering);
-  nameInput.required = registering;
-
-  loginTab.classList.toggle("active", !registering);
-  registerTab.classList.toggle("active", registering);
-
-  submitBtn.textContent = registering
-    ? "রেজিস্ট্রেশন করুন"
-    : "লগইন করুন";
-
-  passwordInput.autocomplete = registering
-    ? "new-password"
-    : "current-password";
-
-  message.textContent = "";
+function showCategories(){
+document.getElementById("categories").innerHTML=cats.map(c=>
+`<button class="cat ${c===category?'active':''}" onclick="setCategory('${c}')">${c}</button>`
+).join("");
 }
 
-loginTab.onclick = () => setMode("login");
-registerTab.onclick = () => setMode("register");
-
-function showError(error) {
-  const errors = {
-    "auth/email-already-in-use": "এই ইমেইলে অ্যাকাউন্ট আছে। লগইন করুন।",
-    "auth/invalid-email": "সঠিক ইমেইল লিখুন।",
-    "auth/weak-password": "পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের দিন।",
-    "auth/invalid-credential": "ইমেইল অথবা পাসওয়ার্ড ভুল।",
-    "auth/operation-not-allowed": "Firebase-এ Email/Password চালু করুন।",
-    "auth/network-request-failed": "ইন্টারনেট সংযোগ পরীক্ষা করুন।"
-  };
-
-  message.textContent =
-    errors[error.code] || "সমস্যা হয়েছে: " + error.message;
+function showProducts(){
+let q=document.getElementById("search").value.toLowerCase();
+let list=products.filter(p=>
+(category==="All"||p.cat===category)&&
+(p.name+" "+p.brand+" "+p.cat).toLowerCase().includes(q)
+);
+document.getElementById("products").innerHTML=list.length?list.map(p=>`
+<div class="card">
+<div class="photo">${p.emoji}</div>
+<div class="info">
+<div class="brand">${p.brand}</div>
+<div class="name">${p.name}</div>
+<div class="price">${money(p.price)}</div>
+<button class="add" onclick="add(${p.id})">কার্টে যোগ করুন</button>
+</div>
+</div>`).join(""):"কোনো পণ্য পাওয়া যায়নি";
 }
 
-form.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  submitBtn.disabled = true;
-  message.textContent = "";
+function setCategory(c){
+category=c;showCategories();showProducts();
+}
 
-  try {
-    const email = emailInput.value.trim();
-    const password = passwordInput.value;
+function add(id){
+cart[id]=(cart[id]||0)+1;
+updateCart();
+}
 
-    if (mode === "register") {
-      const result = await createUserWithEmailAndPassword(
-        auth, email, password
-      );
+function updateCart(){
+let count=Object.values(cart).reduce((a,b)=>a+b,0);
+document.getElementById("count").textContent=count;
+let total=0;
+let html="";
+for(let id in cart){
+let p=products.find(x=>x.id==id);
+let qty=cart[id];
+total+=p.price*qty;
+html+=`<div class="line">
+<div>${p.name}<br>${money(p.price)} × ${qty}</div>
+<div class="qty">
+<button onclick="change(${id},-1)">−</button>
+${qty}
+<button onclick="change(${id},1)">+</button>
+</div></div>`;
+}
+document.getElementById("cartItems").innerHTML=html||"কার্ট খালি";
+document.getElementById("total").textContent="মোট: "+money(total);
+}
 
-      const displayName = nameInput.value.trim();
+function change(id,n){
+cart[id]=(cart[id]||0)+n;
+if(cart[id]<=0)delete cart[id];
+updateCart();
+}
 
-      if (displayName) {
-        await updateProfile(result.user, {
-          displayName: displayName
-        });
-      }
+function openCart(){
+updateCart();
+document.getElementById("modal").classList.add("show");
+}
 
-      message.textContent = "রেজিস্ট্রেশন সফল হয়েছে!";
-    } else {
-      await signInWithEmailAndPassword(
-        auth, email, password
-      );
+function closeCart(){
+document.getElementById("modal").classList.remove("show");
+}
 
-      message.textContent = "লগইন সফল হয়েছে!";
-    }
-  } catch (error) {
-    showError(error);
-  } finally {
-    submitBtn.disabled = false;
-  }
+function checkout(){
+if(!Object.keys(cart).length){
+alert("আগে পণ্য কার্টে যোগ করুন");
+return;
+}
+let message="আপনার অর্ডার:\\n";
+let total=0;
+for(let id in cart){
+let p=products.find(x=>x.id==id);
+message+=p.name+" × "+cart[id]+"\\n";
+total+=p.price*cart[id];
+}
+message+="মোট: "+money(total);
+alert(message);
+}
+
+document.getElementById("searchForm").addEventListener("submit",e=>{
+e.preventDefault();showProducts();
 });
+document.getElementById("search").addEventListener("input",showProducts);
 
-onAuthStateChanged(auth, (user) => {
-  form.classList.toggle("hidden", !!user);
-  loginTab.classList.toggle("hidden", !!user);
-  registerTab.classList.toggle("hidden", !!user);
-  welcome.classList.toggle("hidden", !user);
-
-  if (user) {
-    document.querySelector(".card > p").textContent =
-      "আপনার অ্যাকাউন্ট";
-
-    document.getElementById("userEmail").textContent =
-      user.email || "";
-  } else {
-    document.querySelector(".card > p").textContent =
-      "আপনার অ্যাকাউন্টে প্রবেশ করুন";
-  }
-});
-
-document.getElementById("logoutBtn").onclick = async () => {
-  try {
-    await signOut(auth);
-    message.textContent = "লগআউট সফল হয়েছে।";
-  } catch (error) {
-    showError(error);
-  }
-};
+showCategories();
+showProducts();
+updateCart();
 </script>
 </body>
-  </html>
+</html>
