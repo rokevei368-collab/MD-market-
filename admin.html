@@ -137,43 +137,93 @@ placeholder="ছবির লিংক দিন">
 <div class="card">
 <h3>🛍️ আমার প্রোডাক্ট</h3>
 <div id="productList">লোড হচ্ছে...</div>
-</div>
 
-<button class="primary" id="logoutBtn"
-style="background:#e94343">
-Logout
-</button>
+const STORAGE_KEY = "localServices";
 
-</div>
-</div>
+// সার্ভিসের তথ্য লোড
+let services = JSON.parse(
+  localStorage.getItem(STORAGE_KEY) || "[]"
+);
 
-<script type="module">
+let editIndex = -1;
 
-import {initializeApp}
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
-import {
-getAuth,
-signInWithEmailAndPassword,
-onAuthStateChanged,
-signOut
+// তথ্য সংরক্ষণ
+function saveServices() {
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify(services)
+  );
+  showServices();
 }
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import {
-getFirestore,
-collection,
-addDoc,
-getDocs,
-deleteDoc,
-doc,
-serverTimestamp
+// নতুন সার্ভিস যোগ
+function addService(name, category, area, phone) {
+  if (!name || !category || !area || !phone) {
+    alert("সব তথ্য পূরণ করুন");
+    return;
+  }
+
+  services.push({
+    id: Date.now(),
+    name,
+    category,
+    area,
+    phone
+  });
+
+  saveServices();
+  alert("নতুন সার্ভিস যোগ হয়েছে");
 }
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const ADMIN_EMAIL = "skmaha123411@gmail.com";
+// সার্ভিস এডিট
+function updateService(id, newData) {
+  const index = services.findIndex(
+    service => service.id === id
+  );
 
+  if (index === -1) return;
 
+  services[index] = {
+    ...services[index],
+    ...newData
+  };
+
+  saveServices();
+  alert("তথ্য পরিবর্তন হয়েছে");
+}
+
+// সার্ভিস ডিলিট
+function deleteService(id) {
+  if (!confirm("আপনি কি মুছে ফেলতে চান?")) return;
+
+  services = services.filter(
+    service => service.id !== id
+  );
+
+  saveServices();
+  alert("সার্ভিস মুছে ফেলা হয়েছে");
+}
+
+// সব সার্ভিস দেখানো
+function showServices() {
+  const list = document.getElementById("serviceList");
+
+  if (!list) return;
+
+  list.innerHTML = "";
+
+  services.forEach(service => {
+    const item = document.createElement("div");
+    item.textContent =
+      `${service.name} | ${service.category} | ${service.area} | ${service.phone}`;
+
+    list.appendChild(item);
+  });
+}
+
+// পেজ চালু হলে তালিকা দেখাবে
+document.addEventListener("DOMContentLoaded", showServices);
+ 
 
 const firebaseConfig = {
   apiKey: "AIzaSyDVM0IOKNl548Sgi__4a-aS48QImFnaOgQ",
